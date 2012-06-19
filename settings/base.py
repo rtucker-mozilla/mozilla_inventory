@@ -44,8 +44,9 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     'api_v2',
     'reports',
 ]
-
-
+MIDDLEWARE_CLASSES = list(MIDDLEWARE_CLASSES) + [
+        'middleware.restrict_to_remote.LDAPGroupMembership'
+        ]
 # Because Jinja2 is the default template loader, add any non-Jinja templated
 # apps here:
 JINGO_EXCLUDE_APPS = [
@@ -84,3 +85,8 @@ AUTHENTICATION_BACKENDS = (
 AUTH_PROFILE_MODULE = "systems.UserProfile"
 PISTON_IGNORE_DUPE_MODELS = True
 #TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+"""
+    DEV_EMAIL_ADDRESS is a way to set the REMOTE_USER via middleware for development
+    Since this app can and often lives behind BASIC AUTH
+"""
+DEV_EMAIL_ADDRESS = ''

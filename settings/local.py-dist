@@ -85,6 +85,8 @@ if USE_LDAP:
     LDAP_USER = ''
     LDAP_PASS = ''
 BUG_URL = ''
+AVAILABLE_LDAP_GROUPS = []
+
 #import mysite.monitor
 #mysite.monitor.start(interval=1.0)
 # Specify your custom test runner to use

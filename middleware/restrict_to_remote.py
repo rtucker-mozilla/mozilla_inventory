@@ -41,6 +41,13 @@ class LdapGroupRequired(object):
                     return f(request, *args, **kwargs)            
             #f(request, *args, **kwargs)            
         return wrapped_f
+class LDAPGroupMembership:
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        available_ldap_groups = settings.AVAILABLE_LDAP_GROUPS
+        request.user.LDAP_GROUPS = []
+        for group in available_ldap_groups:
+            if ldap_user_in_group(request.META['REMOTE_USER'], group):
+                request.user.LDAP_GROUPS.append(group)
 
 class RestrictToRemoteMiddleware:
 
@@ -49,6 +56,7 @@ class RestrictToRemoteMiddleware:
         if getattr(view_func, 'sysadmin_only', False) and _in_group(request.user, 'build'):
             return HttpResponseForbidden("You are not authorized to view this page")
         if settings.DEV == True:
+            request.META['REMOTE_USER'] = settings.DEV_EMAIL_ADDRESS
             return None
         ## Check if connecting to /tokenapi.
         ## IF so then we don't need to check the rest of this stuff. The API will validate credentials
