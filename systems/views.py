@@ -93,6 +93,10 @@ def system_auto_complete_ajax(request):
     ret_dict['data'] = id_list
     return HttpResponse(json.dumps(ret_dict))
 
+@LdapGroupRequired('netops', exclusive=False)
+def netops_home(self):
+    return HttpResponse('Future home for netops')
+
 @allow_anyone
 def list_all_systems_ajax(request):
 #iSortCol_0 = which column is sorted
@@ -236,7 +240,8 @@ def home(request):
     return render_to_response('systems/index.html', {
             'read_only': getattr(request, 'read_only', False),
             'is_build': getattr(request.user.groups.all(), 'build', False),
-           })
+            },
+            RequestContext(request))
 
 @allow_anyone
 def system_quicksearch_ajax(request):

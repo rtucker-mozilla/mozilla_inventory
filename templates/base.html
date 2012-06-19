@@ -44,6 +44,9 @@
                 <li><a href="/truth/">Truth Database</a></li>
                 <li><a href="/reports/">Reporting</a></li>
                 <li><a href="/systems/oncall/">On Call</a></li>
+                    {% if 'netops' in request.user.LDAP_GROUPS %}
+                        <li><a href="/systems/netops/">Netops</a></li>
+                    {% endif %}
                 {% endif %}
             </ul>
         </div>

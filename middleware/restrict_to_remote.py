@@ -45,9 +45,12 @@ class LDAPGroupMembership:
     def process_view(self, request, view_func, view_args, view_kwargs):
         available_ldap_groups = settings.AVAILABLE_LDAP_GROUPS
         request.user.LDAP_GROUPS = []
-        for group in available_ldap_groups:
-            if ldap_user_in_group(request.META['REMOTE_USER'], group):
-                request.user.LDAP_GROUPS.append(group)
+        if not view_func.func_name == "serve":
+            for group in available_ldap_groups:
+                if ldap_user_in_group(request.META['REMOTE_USER'], group):
+                    request.user.LDAP_GROUPS.append(group)
+                else:
+                    continue
 
 class RestrictToRemoteMiddleware:
 
