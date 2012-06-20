@@ -45,7 +45,7 @@
                 <li><a href="/reports/">Reporting</a></li>
                 <li><a href="/systems/oncall/">On Call</a></li>
                     {% if 'netops' in request.user.LDAP_GROUPS %}
-                        <li><a href="/systems/netops/">Netops</a></li>
+                    <li><a href="{% url netops-home %}">Netops</a></li>
                     {% endif %}
                 {% endif %}
             </ul>
