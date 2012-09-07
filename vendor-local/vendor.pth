@@ -4,3 +4,4 @@ src/django-tastytools
 src/django-multidb-router
 src/mimeparse
 src/django-extensions
+src/PyYAML-3.10/lib

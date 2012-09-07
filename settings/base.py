@@ -45,6 +45,7 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     'reports',
     'tastypie',
     'tastytools',
+    'puppet_connect',
 ]
 
 
