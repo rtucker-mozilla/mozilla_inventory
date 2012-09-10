@@ -1,13 +1,24 @@
-"""
-This file demonstrates two different styles of tests (one doctest and one
-unittest). These will both pass when you run "manage.py test".
-
-Replace these with more appropriate tests for your application.
-"""
-
 from django.core.urlresolvers import reverse
 from django.test.client import Client
 from django.test import TestCase
+import models
+import systems.models as system_models
+
+test_yaml_short="""--- !ruby/object:Puppet::Node::Facts
+  expiration: 2012-09-07 08:17:43.793806 -07:00
+  name: fake-hostname2.vlan.dc.mozilla.com
+  values: 
+    memorytotal: &id001 1.00 GB
+    hostname: fake-hostname2
+    hardwaremodel: &id002 x86_64"""
+
+test_yaml_short_repost="""--- !ruby/object:Puppet::Node::Facts
+  expiration: 2012-09-07 08:17:43.793806 -07:00
+  name: fake-hostname2.vlan.dc.mozilla.com
+  values: 
+    memorytotal: &id001 2.00 GB
+    hostname: fake-hostname2
+    hardwaremodel: &id002 x86_64"""
 
 test_yaml="""--- !ruby/object:Puppet::Node::Facts
   expiration: 2012-09-07 08:17:43.793806 -07:00
@@ -97,6 +108,7 @@ class PageTests(TestCase):
     fixtures = ['testdata.json']
 
     def setUp(self):
+        self.hostname = 'fake-hostname2'
         self.url_prefix = '/en-US'
         self.index_url = "%s%s" % (
                 self.url_prefix, reverse('puppet-collect-index'))
@@ -115,3 +127,33 @@ class PageTests(TestCase):
         resp = self.client.post(self.index_url, data=data)
         self.assertEqual(resp.status_code, 200)
 
+    def test3_test_collector_accepts_post(self):
+        data = {
+                'fact': test_yaml_short
+                }
+        resp = self.client.post(self.index_url, data=data)
+        self.assertEqual(resp.status_code, 200)
+        objs = models.PuppetFact.objects.all()
+        self.assertEqual(objs[0].fact, 'memorytotal')
+        self.assertEqual(objs[0].value, '1.00 GB')
+        self.assertEqual(objs[1].fact, 'hardwaremodel')
+        self.assertEqual(objs[1].value, 'x86_64')
+
+    def test4_test_collector_versions(self):
+        self.client.post(
+                self.index_url,
+                data={'fact': test_yaml_short})
+        resp = self.client.post(
+                self.index_url, 
+                data={'fact': test_yaml_short_repost})
+        self.assertEqual(resp.status_code, 200)
+        system = system_models.System.objects.get(hostname=self.hostname)
+        new_fact = models.PuppetFact.objects.get(
+                system=system, fact='memorytotal')
+        self.assertEqual(new_fact.fact, 'memorytotal')
+        self.assertEqual(new_fact.value, '2.00 GB')
+        versioned_fact = models.PuppetFactVersion.objects.filter(
+                fact=new_fact)[0]
+        self.assertEqual(versioned_fact.fact.fact, 'memorytotal')
+        self.assertEqual(versioned_fact.value, '2.00 GB')
+        self.assertEqual(versioned_fact.old_value, '1.00 GB')

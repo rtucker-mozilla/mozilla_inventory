@@ -20,14 +20,10 @@ def index(request):
         fqdn = fact['values'].pop('fqdn', None)
         system = return_system(short_hostname, fqdn)
         for item in fact['values'].iterkeys():
-            tmp = models.PuppetFact(system=system, fact=item, value=fact['values'][item]).save()
-        for item in fact['values'].iterkeys():
-            tmp = models.PuppetFact(system=system, fact=item, value=fact['values'][item]).save()
-        for item in fact['values'].iterkeys():
-            tmp = models.PuppetFact(system=system, fact=item, value=fact['values'][item]).save()
-        return HttpResponse('asdf')
+            models.PuppetFact(system=system, fact=item, value=fact['values'][item]).save()
+        return HttpResponse('OK')
     else:
-        return HttpResponse('asdf')
+        return HttpResponse('NO POST')
 def preprocess_yaml(yaml_input):
     output = ""
     for entry in yaml_input.split("\n"):

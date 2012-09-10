@@ -20,29 +20,24 @@ class PuppetFact(models.Model):
             PuppetFactVersion with the new value and the old
             If it does not exist, we just save and move on with our lives
         """
+
         try:
-            existing = PuppetFact.objects.filter(system=self.system, fact=self.fact, value=self.value)[0]
-            if existing:
-                """
-                    We want to backup the old and new values, then overwrite
-                """
-                super(PuppetFact, self).save(*args, **kwargs)
-                versioned_fact = PuppetFactVersion(
-                        fact=self,
-                        value=self.value,
-                        old_value=existing.value,
-                        updated_on = datetime.datetime.now())
-                versioned_fact.save()
-                return
-        except IndexError:
+            existing = PuppetFact.objects.get(system=self.system, fact=self.fact)
+        except PuppetFact.DoesNotExist:
+            existing = False
+
+        if existing:
             """
-                There is not an existing fact
+                We want to backup the old and new values, then overwrite
             """
-            pass
-        except Exception, e:
-            print e
+            versioned_fact = PuppetFactVersion(
+                    fact=existing,
+                    value=self.value,
+                    old_value=existing.value,
+                    updated_on = datetime.datetime.now())
+            versioned_fact.save()
+            self.id = existing.id
         super(PuppetFact, self).save(*args, **kwargs)
-        #super(PuppetFact, self).save(*args, **kwargs)
 
 class PuppetFactVersion(models.Model):
     fact = models.ForeignKey(PuppetFact)
