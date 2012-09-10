@@ -23,6 +23,12 @@ class PuppetFact(models.Model):
 
         try:
             existing = PuppetFact.objects.get(system=self.system, fact=self.fact)
+            """
+                We don't want to do anything if the incoming and existing
+                values are the same.
+            """
+            if existing.value == self.value:
+                return
         except PuppetFact.DoesNotExist:
             existing = False
 

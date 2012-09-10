@@ -157,3 +157,24 @@ class PageTests(TestCase):
         self.assertEqual(versioned_fact.fact.fact, 'memorytotal')
         self.assertEqual(versioned_fact.value, '2.00 GB')
         self.assertEqual(versioned_fact.old_value, '1.00 GB')
+
+    def test5_test_collector_version_no_change_to_value(self):
+        self.client.post(
+                self.index_url,
+                data={'fact': test_yaml_short})
+        resp = self.client.post(
+                self.index_url, 
+                data={'fact': test_yaml_short})
+        self.assertEqual(resp.status_code, 200)
+        system = system_models.System.objects.get(hostname=self.hostname)
+        new_fact = models.PuppetFact.objects.get(
+                system=system, fact='memorytotal')
+        self.assertEqual(new_fact.fact, 'memorytotal')
+        self.assertEqual(new_fact.value, '1.00 GB')
+        """
+            Since we don't want to create a version if the fact is the same
+            confirm that there are no versioned facts for this
+            fact/value combination
+        """
+        self.assertEqual(0, len(models.PuppetFactVersion.objects.filter(
+                fact=new_fact)))
