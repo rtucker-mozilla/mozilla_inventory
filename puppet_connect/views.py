@@ -24,6 +24,23 @@ def index(request):
         return HttpResponse('OK')
     else:
         return HttpResponse('NO POST')
+def history(request, fact, system_id):
+    system = system_models.System.objects.get(pk=system_id)
+    facts = models.PuppetFact.objects.get(system=system, fact=fact)
+    tmp = []
+    for f in facts.puppetfactversion_set.all().order_by('-updated_on'):
+        tmp.append({
+            'fact': f.fact.fact,
+            'value': f.value,
+            'old_value': f.old_value,
+            'updated_on': f.updated_on.strftime("%Y-%m-%d %I:%H"),
+
+            })
+
+    
+    
+    return HttpResponse(json.dumps(tmp));
+
 def preprocess_yaml(yaml_input):
     output = ""
     for entry in yaml_input.split("\n"):

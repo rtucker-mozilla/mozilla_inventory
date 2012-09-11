@@ -178,3 +178,26 @@ class PageTests(TestCase):
         """
         self.assertEqual(0, len(models.PuppetFactVersion.objects.filter(
                 fact=new_fact)))
+
+    def test6_test_collector_only_keeps_previous_5(self):
+        system = system_models.System.objects.get(hostname=self.hostname)
+        """
+            We only want to keep the 5 previous versions of a fact
+            Create 10 facts and confirm that the sizing and values
+            of each fact are correct
+        """
+
+        for i in range(1,11):
+            models.PuppetFact(
+                    system=system,
+                    fact='memorytotal',
+                    value='%i GB' %i).save()
+        fact = models.PuppetFact.objects.get(system=system, fact='memorytotal')
+        self.assertEqual(fact.value, '10 GB')
+        versions = models.PuppetFactVersion.objects\
+                .order_by('-id').filter(fact=fact)
+        self.assertEqual(5, len(versions))
+        self.assertEqual(versions[0].value, '10 GB')
+        self.assertEqual(versions[0].old_value, '9 GB')
+        self.assertEqual(versions[4].value, '6 GB')
+        self.assertEqual(versions[4].old_value, '5 GB')

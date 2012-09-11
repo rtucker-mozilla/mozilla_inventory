@@ -132,14 +132,16 @@
 </div><div>
 
 <dl class="show">
+    <dt>[<a class='show_dd'>Show</a>|<a class='hide_dd'>Hide</a>]</dt>
 <dt>Notes: </dt>
-<dd style="float:left; font-size:medium; margin: 3px 0 0 -3px;"><pre style='width: 700px; white-space: normal;'>{{ system.notes_with_link }}</pre></dd>
+<dd class='hidable' style="float:left; font-size:medium; margin: 3px 0 0 -3px;"><pre style='width: 700px; white-space: normal;'>{{ system.notes_with_link }}</pre></dd>
 <div style="clear:both;"></div>
 </dl>
 
 <dl class="show">
-<dt>Network Adapters: </dt>
-<dd style="float:left; font-size:medium; margin: 3px 0 0 -3px;">
+    <dt>[<a class='show_dd'>Show</a>|<a class='hide_dd'>Hide</a>]</dt>
+    <dt>Network Adapters: </dt>
+<dd class='hidable' style="float:left; font-size:medium; margin: 3px 0 0 -3px;">
 <pre>
     {{ adapter }} 
     <table>
@@ -155,8 +157,9 @@
 </dl>
 </div>
 <dl class="show">
+    <dt>[<a class='show_dd'>Show</a>|<a class='hide_dd'>Hide</a>]</dt>
 <dt>Key/Value Store (without network adapters): </dt>
-<dd style="float:left; font-size:medium; margin: 3px 0 0 -3px;">
+<dd class='hidable' style="float:left; font-size:medium; margin: 3px 0 0 -3px;">
 <pre>
     <table>
     <tr><th>Key</th><th>Value</th></tr>
@@ -168,13 +171,40 @@
 </pre></dd>
 <div style="clear:both;"></div>
 </dl>
+<dl class="show">
+    <dt>[<a class='show_dd'>Show</a>|<a class='hide_dd'>Hide</a>]</dt>
+<dt>Puppet Facts Store: </dt>
+<dd class='hidable' style="float:left; font-size:medium; margin: 3px 0 0 -3px;">
+    <table style="width: 600px;">
+    <tr>
+        <th>Fact</th>
+        <th>Current</th>
+        <th>Modified</th>
+        <th>History</th>
+    </tr>
+    {% for key in system.puppetfact_set.order_by('fact').all() %}
+        <tr>
+            <td>{{ key.fact}}</td>
+            <td>{{ key.value }}</td>
+            <td>{{ key.updated_on.strftime('%Y-%m-%d %I:%H') }}</td>
+            <td>
+                <a href="#" class="puppet_fact_history" rel="{{ system.id }}|{{ key.fact }}">History</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+
+</dd>
+<div style="clear:both;"></div>
+</dl>
 </div>
 {% if not read_only %}
 <div>
 
     <dl class="show">
+        <dt>[<a class='show_dd'>Show</a>|<a class='hide_dd'>Hide</a>]</dt>
         <dt>Licenses: </dt>
-        <dd style="float:left; font-size:medium; margin: 3px 0 0 -3px;"><pre>{{ system.licenses }}</pre></dd>
+        <dd class='hidable' style="float:left; font-size:medium; margin: 3px 0 0 -3px;"><pre>{{ system.licenses }}</pre></dd>
         <div style="clear:both;"></div>
     </dl>
 </div>
@@ -185,4 +215,72 @@
 <a href="{{ "systems.views.system_edit"|url(system.id) }}">Edit</a>
 {% endif %}
 <a href="{{ "systems.views.home"|url() }}">Back</a>
+<style type="text/css">
+    .hide_dd, .show_dd {
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .show > dd.hidable {
+        display: none;
+    }
+</style>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $(".show_dd").click(function(){
+            next_dd = $(this).parent().next().next();
+            next_dd.css('display', 'block');
+        });
+        $(".hide_dd").click(function(){
+            next_dd = $(this).parent().next().next();
+            next_dd.css('display', 'none');
+        });
+        $('.puppet_fact_history').click(function(){
+            var rel_split = $(this).attr('rel').split('|');
+            var system_id = rel_split[0];
+            var fact = rel_split[1];
+            $.getJSON(
+                '/en-US/puppet_connect/history/' + fact + '/' + system_id + '/',
+                function(data){
+                    var message = "<table>";
+                    message += "<tr>";
+                    message += "<th>Fact</th>";
+                    message += "<th>New Value</th>";
+                    message += "<th>Old Value</th>";
+                    message += "<th>Changed</th>";
+                    message += "</tr>";
+                    $.each(data, function(index, item){
+                        message += "<tr>";
+                        message += "<td>" + item.fact + "</td>";
+                        message += "<td>" + item.value + "</td>";
+                        message += "<td>" + item.old_value + "</td>";
+                        message += "<td>" + item.updated_on + "</td>";
+                        message += "</tr>";
+                    });
+                    message += "</table>";
+                    $("#puppet-fact-inside").html(message);
+                    var d = $( "#puppet-fact-outside" ).dialog({
+                        title: 'Fact History' + ' - ' + fact,
+                        width: 600,
+                        autoShow: false,
+                        buttons: {
+                            "Close": function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    });
+                    d.show();
+                }
+            );
+        
+            return false;
+        });
+    });
+</script>
+<div id="puppet-fact-outside" title="Puppet Fact History" style='display: none; width: 700px;'>
+<div id="puppet-fact-inside"></div>
+</div>
+{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="/static/js/jquery-ui-1.8.11.custom.min.js"></script>
+    <link rel="stylesheet" href="/static/css/smoothness/jquery-ui-1.8.11.custom.css" type="text/css" />
 {% endblock %}
